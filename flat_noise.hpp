@@ -32,6 +32,10 @@ private:
 	static bool init_random();
 	static float get_random();
 
+	static float mid_disp(float v1, float v2, float offset);
+	static float mid_disp(float v1, float v2, float v3, float offset);
+	static float mid_disp(float v1, float v2, float v3, float v4, float offset);
+
 	static bool __random_inited;
 	static float __epsilon;
 };

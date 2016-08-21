@@ -1,5 +1,6 @@
 #include "flat_noise.hpp"
 #include <stdexcept>
+#include <cstdio>
 
 bool FlatNoise::__random_inited = init_random();
 float FlatNoise::__epsilon = 1e-8f;
@@ -13,6 +14,21 @@ bool FlatNoise::init_random()
 float FlatNoise::get_random()
 {
 	return static_cast<float>(rand()) / RAND_MAX;
+}
+
+float FlatNoise::mid_disp(float v1, float v2, float offset)
+{
+	return 0.5f * (v1 + v2) + (2.0f * get_random() - 1.0f) * offset;
+}
+
+float FlatNoise::mid_disp(float v1, float v2, float v3, float offset)
+{
+	return (v1 + v2 + v3) / 3.0f + (2.0f * get_random() - 1.0f) * offset;
+}
+
+float FlatNoise::mid_disp(float v1, float v2, float v3, float v4, float offset)
+{
+	return 0.25f * (v1 + v2 + v3 + v4) + (2.0f * get_random() - 1.0f) * offset;
 }
 
 FlatNoise::FlatNoise(size_t row_count, size_t column_count, float low, float high, float offset, float compress)
@@ -99,4 +115,56 @@ inline const float& FlatNoise::get(size_t row, size_t column) const
 {
 	if (row > _row_count || column > _column_count) throw std::out_of_range("vector::_M_range_check");
 	return _v.at(row * _column_count + column);
+}
+
+void FlatNoise::make_square(size_t left, size_t top, size_t right, size_t bottom, float offset)
+{
+	float top_left     = get(top, left);
+	float top_right    = get(top, right);
+	float bottom_left  = get(bottom, left);
+	float bottom_right = get(bottom, right);
+
+	float mid = mid_disp(top_left, top_right, bottom_left, bottom_right, offset);
+
+	size_t h_mid = left + right >> 1;
+	size_t v_mid = top + bottom >> 1;
+
+	size_t dh = right - left >> 1;
+	size_t dv = bottom - top >> 1;
+
+	if (right <= 1 + left && bottom <= 1 + top)
+	{
+		return;
+	}
+	if (right <= 1 + left)
+	{
+		get(v_mid, left)  = mid_disp(top_left,  bottom_left,  offset);
+		get(v_mid, right) = mid_disp(top_right, bottom_right, offset);
+
+		offset *= _compress;
+		make_square(left, top,   right,  v_mid, offset);
+		make_square(left, v_mid, right, bottom, offset);
+		return;
+	}
+	if (bottom <= 1 + top)
+	{
+		get(top,    h_mid) = mid_disp(top_left,    top_right,    offset);
+		get(bottom, h_mid) = mid_disp(bottom_left, bottom_right, offset);
+
+		offset *= _compress;
+		make_square(left,  top, h_mid, bottom, offset);
+		make_square(h_mid, top, right, bottom, offset);
+		return;
+	}
+	get(v_mid,  h_mid) = mid;
+	get(v_mid,  left)  = mid_disp(top_left,    bottom_left,  offset);
+	get(v_mid,  right) = mid_disp(top_right,   bottom_right, offset);
+	get(top,    h_mid) = mid_disp(top_left,    top_right,    offset);
+	get(bottom, h_mid) = mid_disp(bottom_left, bottom_right, offset);
+
+	offset *= _compress;
+	make_square(left,  top,   h_mid, v_mid,  offset);
+	make_square(h_mid, top,   right, v_mid,  offset);
+	make_square(left,  v_mid, h_mid, bottom, offset);
+	make_square(h_mid, v_mid, right, bottom, offset);
 }
