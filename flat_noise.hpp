@@ -30,6 +30,8 @@ protected:
 	float _compress;
 private:
 	static bool init_random();
+	static float get_random();
+
 	static bool __random_inited;
 	static float __epsilon;
 };
