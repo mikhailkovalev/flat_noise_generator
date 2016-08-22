@@ -36,6 +36,8 @@ private:
 	static float mid_disp(float v1, float v2, float v3, float offset);
 	static float mid_disp(float v1, float v2, float v3, float v4, float offset);
 
+	static float mid(float v1, float v2);
+
 	static bool __random_inited;
 	static float __epsilon;
 };
