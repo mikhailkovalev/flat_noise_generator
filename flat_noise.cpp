@@ -1,6 +1,6 @@
 #include "flat_noise.hpp"
 #include <stdexcept>
-#include <cstdio>
+//#include <cstdio>
 
 bool FlatNoise::__random_inited = init_random();
 float FlatNoise::__epsilon = 1e-8f;
@@ -57,6 +57,12 @@ void FlatNoise::generate(float low, float high, float offset, float compress)
 	get(_row_count - 1, 0)                 = get_random();
 	get(0, _column_count - 1)              = get_random();
 	get(_row_count - 1, _column_count - 1) = get_random();
+
+	/*printf("%f -> [0, 0]\n", get(0, 0));
+	printf("%f -> [%u, 0]\n", get(_row_count - 1, 0), _row_count - 1);
+	printf("%f -> [0, %u]\n", get(0, _column_count - 1), _column_count - 1);
+	printf("%f -> [%u, %u]\n", get(_row_count - 1, _column_count - 1), _row_count - 1, _column_count - 1);
+	printf("\n\n");*/
 
 	make_square(0, 0, _column_count - 1, _row_count - 1, offset / (high - low));
 	transform_to(low, high);
@@ -124,6 +130,8 @@ void FlatNoise::make_square(size_t left, size_t top, size_t right, size_t bottom
 	float bottom_left  = get(bottom, left);
 	float bottom_right = get(bottom, right);
 
+	//printf("square {(%u, %u), (%u, %u)}\n", left, top, right, bottom);
+
 	float mid = mid_disp(top_left, top_right, bottom_left, bottom_right, offset);
 
 	size_t h_mid = left + right >> 1;
@@ -132,14 +140,23 @@ void FlatNoise::make_square(size_t left, size_t top, size_t right, size_t bottom
 	size_t dh = right - left >> 1;
 	size_t dv = bottom - top >> 1;
 
+	if (dh == 0) dh = 1;
+	if (dv == 0) dv = 1;
+
 	if (right <= 1 + left && bottom <= 1 + top)
 	{
+		//printf("it is too small\n\n\n");
 		return;
 	}
 	if (right <= 1 + left)
 	{
-		get(v_mid, left)  = mid_disp(top_left,  bottom_left,  offset);
-		get(v_mid, right) = mid_disp(top_right, bottom_right, offset);
+		get(v_mid, left)  = mid_disp(top_left,  bottom_left,  0);
+		get(v_mid, right) = mid_disp(top_right, bottom_right, 0);
+
+		/*printf("it is vertical bar\n");
+		printf("%f -> (%u, %u)\n", get(v_mid, left), v_mid, left);
+		printf("%f -> (%u, %u)\n", get(v_mid, right), v_mid, right);
+		printf("\n\n");*/
 
 		offset *= _compress;
 		make_square(left, top,   right,  v_mid, offset);
@@ -148,8 +165,13 @@ void FlatNoise::make_square(size_t left, size_t top, size_t right, size_t bottom
 	}
 	if (bottom <= 1 + top)
 	{
-		get(top,    h_mid) = mid_disp(top_left,    top_right,    offset);
-		get(bottom, h_mid) = mid_disp(bottom_left, bottom_right, offset);
+		get(top,    h_mid) = mid_disp(top_left,    top_right,    0);
+		get(bottom, h_mid) = mid_disp(bottom_left, bottom_right, 0);
+
+		/*printf("it is horizontal bar\n");
+		printf("%f -> (%u, %u)\n", get(top, h_mid), top, h_mid);
+		printf("%f -> (%u, %u)\n", get(bottom, h_mid), bottom, h_mid);
+		printf("\n\n");*/
 
 		offset *= _compress;
 		make_square(left,  top, h_mid, bottom, offset);
@@ -157,10 +179,37 @@ void FlatNoise::make_square(size_t left, size_t top, size_t right, size_t bottom
 		return;
 	}
 	get(v_mid,  h_mid) = mid;
-	get(v_mid,  left)  = mid_disp(top_left,    bottom_left,  offset);
-	get(v_mid,  right) = mid_disp(top_right,   bottom_right, offset);
-	get(top,    h_mid) = mid_disp(top_left,    top_right,    offset);
-	get(bottom, h_mid) = mid_disp(bottom_left, bottom_right, offset);
+
+	/*if (left >= dh)
+	{
+		get(v_mid, left) = mid_disp(top_left, bottom_left, mid, get(v_mid, left - dh), 0);
+	}
+	else
+	{
+		get(v_mid, left) = mid_disp(top_left,    bottom_left,  0);
+	}*/
+	get(v_mid,  left)  = mid_disp(top_left,    bottom_left,  0);
+
+	get(v_mid,  right) = mid_disp(top_right,   bottom_right, 0);
+
+	/*if (top >= dv)
+	{
+		get(top, h_mid) = mid_disp(top_left, top_right, mid, get(top - dv, h_mid), offset);
+	}
+	else
+	{
+		get(top,    h_mid) = mid_disp(top_left,    top_right,    offset);
+	}*/
+	get(top,    h_mid) = mid_disp(top_left,    top_right, 0);
+
+	get(bottom, h_mid) = mid_disp(bottom_left, bottom_right, 0);
+
+	/*printf("%f -> (%u, %u)\n", get(v_mid, h_mid), v_mid, h_mid);
+	printf("%f -> (%u, %u)\n", get(v_mid, left), v_mid, left);
+	printf("%f -> (%u, %u)\n", get(v_mid, right), v_mid, right);
+	printf("%f -> (%u, %u)\n", get(top, h_mid), top, h_mid);
+	printf("%f -> (%u, %u)\n", get(bottom, h_mid), bottom, h_mid);
+	printf("\n\n");*/
 
 	offset *= _compress;
 	make_square(left,  top,   h_mid, v_mid,  offset);
