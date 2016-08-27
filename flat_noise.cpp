@@ -1,5 +1,6 @@
 #include "flat_noise.hpp"
 #include <stdexcept>
+#include <cmath>
 
 bool FlatNoise::__random_inited = init_random();
 float FlatNoise::__epsilon = 1e-8f;
@@ -46,12 +47,12 @@ FlatNoise::FlatNoise(size_t row_count, size_t column_count, float low, float hig
 
 inline void FlatNoise::generate()
 {
-	generate(0.0, 0.1, 0.5, 0.5);
+	generate(0.0f, 0.1f, 0.5f, 0.5f);
 }
 
 inline void FlatNoise::generate(float low, float high)
 {
-	generate(low, high, 0.5 * (low + high), 0.5);
+	generate(low, high, 0.5f * fabs(high - low), 0.5f);
 }
 
 void FlatNoise::generate(float low, float high, float offset, float compress)

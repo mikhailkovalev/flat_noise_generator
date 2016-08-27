@@ -22,6 +22,14 @@ public:
 protected:
 	void make_square(size_t left, size_t top, size_t right, size_t bottom, float offset);
 
+	static float get_random();
+
+	static float mid_disp(float v1, float v2, float offset);
+	static float mid_disp(float v1, float v2, float v3, float offset);
+	static float mid_disp(float v1, float v2, float v3, float v4, float offset);
+
+	static float mid(float v1, float v2);
+
 	std::vector<float> _v;
 
 	size_t _row_count;
@@ -30,13 +38,6 @@ protected:
 	float _compress;
 private:
 	static bool init_random();
-	static float get_random();
-
-	static float mid_disp(float v1, float v2, float offset);
-	static float mid_disp(float v1, float v2, float v3, float offset);
-	static float mid_disp(float v1, float v2, float v3, float v4, float offset);
-
-	static float mid(float v1, float v2);
 
 	static bool __random_inited;
 	static float __epsilon;
