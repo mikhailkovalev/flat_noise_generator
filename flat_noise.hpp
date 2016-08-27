@@ -36,9 +36,10 @@ protected:
 	size_t _column_count;
 
 	float _compress;
+
+	static float __epsilon;
 private:
 	static bool init_random();
 
 	static bool __random_inited;
-	static float __epsilon;
 };
